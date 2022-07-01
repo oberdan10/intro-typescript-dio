@@ -1,0 +1,25 @@
+{
+  "name": "intro-typescript-dio",
+  "version": "1.0.0",
+  "description": "Introdução Ao TypeScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "lite-server index.html",
+    "watch": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oberdan10/intro-typescript-dio.git"
+  },
+  "author": "Oberdan Rocha",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oberdan10/intro-typescript-dio/issues"
+  },
+  "homepage": "https://github.com/oberdan10/intro-typescript-dio#readme",
+  "dependencies": {
+    "lite-server": "^2.6.1",
+    "typescript": "^4.7.4"
+  }
+}
