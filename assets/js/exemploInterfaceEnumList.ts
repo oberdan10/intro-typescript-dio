@@ -1,3 +1,4 @@
+/*
 enum Profissao {
     Professora,
     Atriz,
@@ -33,4 +34,4 @@ function listar(lista: string[]){
     }
 }
 
-listar(pessoa2.materias);
+listar(pessoa2.materias);*/
