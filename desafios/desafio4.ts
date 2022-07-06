@@ -9,52 +9,67 @@
 // Todas as requisições necessárias para as atividades acima já estão prontas, mas a implementação delas ficou pela metade (não vou dar tudo de graça).
 // Atenção para o listener do botão login-button que devolve o sessionID do usuário
 // É necessário fazer um cadastro no https://www.themoviedb.org/ e seguir a documentação do site para entender como gera uma API key https://developers.themoviedb.org/3/getting-started/introduction
+interface Login{
+  username:string;
+  password:string;
+  apiKey:string;
+  sessionId:string;
+  requestToken:string;
+}
 
-var apiKey = '80ab4bdc4c3ab3975c1e48fcbaf7edec';
-var apiKey = '0';
-console.log(apiKey)
-// let apiKey;
-let requestToken: any;
-let username = document.getElementById('login') as HTMLInputElement;
-let key = document.getElementById('api-key') as HTMLInputElement
-let password = document.getElementById('senha') as HTMLInputElement;
+interface Lista{
+  listaId:string;
+  nome:string;
+  descricao:string;
+}
+
+const login = {} as Login;
+const lista = {} as Lista;
+
 let pesquisa = document.getElementById('search') as HTMLInputElement;
 let idDaLista = document.getElementById('ipt_idlista') as HTMLInputElement;
-let nomeDaLista = document.getElementById('ipt_lista') as HTMLInputElement;
-let descricaoDaLista = document.getElementById('ipt_descricao') as HTMLInputElement;
 let filme_detalhe = document.getElementById('filme-detalhado-container') as HTMLDivElement;
 
-let sessionId: string;
-let listId: string;
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
-
-let loginButton = document.getElementById('login-button') as HTMLButtonElement;
+let nomeDaLista = document.getElementById('ipt_lista') as HTMLInputElement;
+let descricaoDaLista = document.getElementById('ipt_descricao') as HTMLInputElement;
+let loginButton = document.getElementById('btn-logar') as HTMLButtonElement;
 let searchButton = document.getElementById('search-button') as HTMLButtonElement;
 let btnCriarLista = document.getElementById('btn-criarlista') as HTMLButtonElement;
 let btnRemoverLista = document.getElementById('btn-removerlista') as HTMLButtonElement;
 let btnMostrarLista = document.getElementById('btn-mostrarlistas') as HTMLButtonElement;
-let searchContainer = document.getElementById('resultado-container');
+let searchContainer = document.getElementById('resultado-container') as HTMLDivElement;
 
 if (loginButton) {
   loginButton.addEventListener('click', async () => {
-    //apiKey = key.value;
-    apiKey = '80ab4bdc4c3ab3975c1e48fcbaf7edec';
-    await criarRequestToken();
-    await logar();
-    await criarSessao();
+
+    let username = document.getElementById('login') as HTMLInputElement;
+    let key = document.getElementById('api-key') as HTMLInputElement
+    let password = document.getElementById('senha') as HTMLInputElement;
+
+    login.apiKey = '80ab4bdc4c3ab3975c1e48fcbaf7edec';
+    login.username = username.value;
+    login.password = password.value;
+
+    login.requestToken = await criarRequestToken(login.apiKey);
+    await logar(login.requestToken,login.apiKey,login.username,login.password);
+    login.sessionId = await criarSessao(login.apiKey,login.requestToken);
     alert('Usuário Conectado!');
   })
 }
 
-
 if (btnCriarLista) {
   btnCriarLista.addEventListener('click', async () => {
-    if(!sessionId) throw Error('Sessão expirada, realizar login novamente!');
-    if (!nomeDaLista.value && !descricaoDaLista.value) return;
+    
+    lista.nome = nomeDaLista.value;
+    lista.descricao = descricaoDaLista.value;
+
+    if(!login.sessionId) throw Error('Sessão expirada, realizar login novamente!');
+    if (!lista.nome && !lista.descricao) return;
     try {
-      let result:any = await criarLista();
+      let result:any = await criarLista(login.apiKey,login.sessionId);
       console.log(result);
-      idDaLista.value = String(result.list_id);
+      lista.listaId = String(result.list_id);
       alert(`lista criada - Id:${result.list_id}!`);
     } catch (error) {
       alert('Não foi possível criar lista!');
@@ -64,34 +79,43 @@ if (btnCriarLista) {
 
 if (btnRemoverLista) {
   btnRemoverLista.addEventListener('click', async () => {
-    if(!sessionId) throw Error('Sessão expirada, realizar login novamente!');
-    if (!idDaLista.value) return;
+
+    lista.listaId = idDaLista.value;
+    if(!login.sessionId) throw Error('Sessão expirada, realizar login novamente!');
+    if (!lista.listaId) return;
     try {
-      let result:any = await removerLista();
+      let result:any = await removerLista(login.apiKey, lista.listaId);
       console.log(result);
       alert(`lista removida!`);
     } catch (error) {
       alert('Não foi possível remover lista!');
-      console.log(error.message)
+      console.log(error);
     }
   })
 }
 
 if (btnMostrarLista) {
   btnMostrarLista.addEventListener('click', async () => {
-    if(!sessionId) throw Error('Sessão expirada, realizar login novamente!');
-    if (!idDaLista.value) return;
+
+    lista.listaId = idDaLista.value;
+    if(!login.sessionId) throw Error('Sessão expirada, realizar login novamente!');
+    if (!lista.listaId) return;
     try {
-      let lista = document.getElementById("resultado-container");
-    if (lista) {
-      lista.innerHTML = "";
+      let divlista = document.getElementById("resultado-container");
+    if (divlista) {
+      divlista.innerHTML = "";
     }
 
-      let resultado:any = await pegarLista();
+      let resultado:any = await pegarLista(login.apiKey, lista.listaId);
       console.log(resultado);
 
+      lista.nome = resultado.name;
+      lista.descricao = resultado.description;
+
+      idDaLista.value = lista.listaId;
       nomeDaLista.value = resultado.name;
       descricaoDaLista.value = resultado.description;
+
 
       for (const item of resultado.items) {
         let div = document.createElement('div') as HTMLDivElement;
@@ -111,9 +135,14 @@ if (btnMostrarLista) {
             let btn_lista_add_filme_selecionado = document.createElement('button');
             let h1_filme_selecionado = document.createElement('h1');
             let txt_filme_selecionado = document.createElement('p');
+            let votos_filme_selecionado = document.createElement('p');
+            let ano_filme_selecionado = document.createElement('p');
   
             h1_filme_selecionado.appendChild(document.createTextNode(item.title));
-            txt_filme_selecionado.appendChild(document.createTextNode(item.overview));
+            txt_filme_selecionado.appendChild(document.createTextNode(`${item.overview}`));
+            var data = new Date(item.release_date);
+            ano_filme_selecionado.appendChild(document.createTextNode(`Ano: ${String(data.getFullYear())}`));
+            votos_filme_selecionado.appendChild(document.createTextNode(`Pontuação: ${item.vote_average}`));
             btn_lista_add_filme_selecionado.appendChild(document.createTextNode('Adicionar na Lista'));
   
             img_filme_selecionado.src = `${IMG_URL}${item.poster_path}`;
@@ -128,7 +157,8 @@ if (btnMostrarLista) {
             btn_lista_add_filme_selecionado.addEventListener('click', async () => {
                console.log('Ok');
                 try {
-                  let result:any = await adicionarFilmeNaLista(btn_lista_add_filme_selecionado.value);
+                  lista.listaId = idDaLista.value;
+                  let result:any = await adicionarFilmeNaLista(login.apiKey,login.sessionId,btn_lista_add_filme_selecionado.value, lista.listaId);
                   console.log(result);
                   alert(`Item Adicionado!`);
                 } catch (error) {
@@ -141,6 +171,8 @@ if (btnMostrarLista) {
             filme_detalhe.appendChild(img_filme_selecionado);
             div_txt_filme_selecionado.appendChild(h1_filme_selecionado);
             div_txt_filme_selecionado.appendChild(txt_filme_selecionado);
+            div_txt_filme_selecionado.appendChild(ano_filme_selecionado);
+            div_txt_filme_selecionado.appendChild(votos_filme_selecionado);
             div_txt_filme_selecionado.appendChild(btn_lista_add_filme_selecionado);
             div_txt_filme_selecionado.classList.add('div-filme-selecionado');
             filme_detalhe.appendChild(div_txt_filme_selecionado);
@@ -155,7 +187,7 @@ if (btnMostrarLista) {
         }
       }
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
       alert('Não foi possível mostrar lista! \n Digite o Id da Lista.');
     }
   })
@@ -163,16 +195,16 @@ if (btnMostrarLista) {
 
 if (searchButton) {
   searchButton.addEventListener('click', async () => {
-    if(!sessionId) throw Error('Sessão expirada, realizar login novamente!');
+    if(!login.sessionId) throw Error('Sessão expirada, realizar login novamente!');
 
     try {
-      let lista = document.getElementById("resultado-container");
-      if (lista) {
-        lista.innerHTML = "";
+      let divlista = document.getElementById("resultado-container");
+      if (divlista) {
+        divlista.innerHTML = "";
       }
       let query = pesquisa.value;
       let listaDeFilmes: any = [];
-      listaDeFilmes = await procurarFilme(query);
+      listaDeFilmes = await procurarFilme(login.apiKey, query);
       for (const item of listaDeFilmes.results) {
         let div = document.createElement('div') as HTMLDivElement;
         div.id = "card-container";
@@ -192,10 +224,13 @@ if (searchButton) {
             let h1_filme_selecionado = document.createElement('h1');
             let txt_filme_selecionado = document.createElement('p');
             let votos_filme_selecionado = document.createElement('p');
+            let ano_filme_selecionado = document.createElement('p');
   
             h1_filme_selecionado.appendChild(document.createTextNode(item.title));
             txt_filme_selecionado.appendChild(document.createTextNode(`${item.overview}`));
-            votos_filme_selecionado.appendChild(document.createTextNode(`Votação: ${item.vote_average}`));
+            var data = new Date(item.release_date);
+            ano_filme_selecionado.appendChild(document.createTextNode(`Ano: ${String(data.getFullYear())}`));
+            votos_filme_selecionado.appendChild(document.createTextNode(`Pontuação: ${item.vote_average}`));
             btn_lista_add_filme_selecionado.appendChild(document.createTextNode('Adicionar na Lista'));
   
             img_filme_selecionado.src = `${IMG_URL}${item.poster_path}`;
@@ -206,7 +241,8 @@ if (searchButton) {
   
             btn_lista_add_filme_selecionado.addEventListener('click', async () => {
                try {
-                 let result:any = await adicionarFilmeNaLista(btn_lista_add_filme_selecionado.value);
+                lista.listaId = idDaLista.value;
+                 let result:any = await adicionarFilmeNaLista(login.apiKey,login.sessionId,btn_lista_add_filme_selecionado.value, lista.listaId);
                  alert(`Item Adicionado!`);
                } catch (error) {
                  alert('Não foi possível adicionar na lista!');
@@ -220,6 +256,7 @@ if (searchButton) {
             filme_detalhe.appendChild(img_filme_selecionado);
             div_txt_filme_selecionado.appendChild(h1_filme_selecionado);
             div_txt_filme_selecionado.appendChild(txt_filme_selecionado);
+            div_txt_filme_selecionado.appendChild(ano_filme_selecionado);
             div_txt_filme_selecionado.appendChild(votos_filme_selecionado);
             div_txt_filme_selecionado.appendChild(btn_lista_add_filme_selecionado);
             div_txt_filme_selecionado.classList.add('div-filme-selecionado');
@@ -237,41 +274,13 @@ if (searchButton) {
       }
       
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
     }
   })
 }
 
-
-
-function preencherSenha() {
-  //password = document.getElementById('senha').value;
-  validateLoginButton();
-}
-
-function preencherLogin() {
-  //username =  document.getElementById('login').value ;
-  validateLoginButton();
-}
-
-function preencherApi() {
-  //apiKey = document.getElementById('api-key').value;
-  validateLoginButton();
-}
-
-function validateLoginButton() {
-  if (loginButton) {
-    if (password && username && apiKey) {
-      loginButton.disabled = false;
-    } else {
-      loginButton.disabled = true;
-    }
-  }
-
-}
-
 class HttpClient {
-  static async get({ url, method, body = null }) {
+  static async get({ url = '', method = '', body = '' }) {
     return new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
       request.open(method, url, true);
@@ -302,7 +311,7 @@ class HttpClient {
   }
 }
 
-async function procurarFilme(query) {
+async function procurarFilme(apiKey: string, query: string) {
   query = encodeURI(query)
   console.log(query)
   let result = await HttpClient.get({
@@ -312,7 +321,7 @@ async function procurarFilme(query) {
   return result
 }
 
-async function adicionarFilme(filmeId) {
+async function adicionarFilme(apiKey:string, filmeId: string) {
   let result = await HttpClient.get({
     url: `https://api.themoviedb.org/3/movie/${filmeId}?api_key=${apiKey}&language=pt-BR`,
     method: "GET"
@@ -320,52 +329,52 @@ async function adicionarFilme(filmeId) {
   console.log(result);
 }
 
-async function criarRequestToken() {
+async function criarRequestToken(apiKey: string) {
   let result: any = await HttpClient.get({
     url: `https://api.themoviedb.org/3/authentication/token/new?api_key=${apiKey}`,
     method: "GET"
   })
 
-  requestToken = result.request_token
+  return result.request_token;
 }
 
-async function logar() {
+async function logar(requestToken: string, apiKey: string, username: string, password: string) {
 
   let result: any = await HttpClient.get({
     url: `https://api.themoviedb.org/3/authentication/token/validate_with_login?api_key=${apiKey}`,
     method: "POST",
     body: {
-      username: `${username.value}`,
-      password: `${password.value}`,
+      username: `${username}`,
+      password: `${password}`,
       request_token: `${requestToken}`
     }
   })
 
 }
 
-async function criarSessao() {
+async function criarSessao(apiKey: string, requestToken: string) {
   let result: any = await HttpClient.get({
     url: `https://api.themoviedb.org/3/authentication/session/new?api_key=${apiKey}&request_token=${requestToken}`,
     method: "GET"
   })
-  sessionId = result.session_id;
+  return result.session_id;
 }
 
-async function criarLista() {
+async function criarLista(apiKey: string, sessionId: string) {
 
   let result = await HttpClient.get({
     url: `https://api.themoviedb.org/3/list?api_key=${apiKey}&session_id=${sessionId}`,
     method: "POST",
     body: {
-      name: nomeDaLista.value,
-      description: descricaoDaLista.value,
+      name: lista.nome,
+      description: lista.descricao,
       language: "pt-br"
     }
   })
   return result;
 }
 
-async function adicionarFilmeNaLista(valor: string) {
+async function adicionarFilmeNaLista(apiKey: string, sessionId: string, valor: string, listId: string) {
   let result = await HttpClient.get({
     url: `https://api.themoviedb.org/3/list/${listId}/add_item?api_key=${apiKey}&session_id=${sessionId}`,
     method: "POST",
@@ -376,8 +385,7 @@ async function adicionarFilmeNaLista(valor: string) {
   return result;
 }
 
-async function pegarLista() {
-  listId = idDaLista.value;
+async function pegarLista(apiKey: string,listId: string) {
   let result = await HttpClient.get({
     url: `https://api.themoviedb.org/3/list/${listId}?api_key=${apiKey}&language=pt-BR`,
     method: "GET"
@@ -385,8 +393,7 @@ async function pegarLista() {
   return result;
 }
 
-async function removerLista() {
-  listId = idDaLista.value;
+async function removerLista(apiKey: string, listId: string) {
   let result = await HttpClient.get({
     url: `https://api.themoviedb.org/3/list/${listId}?api_key=${apiKey}`,
     method: "DELETE"
