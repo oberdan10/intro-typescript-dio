@@ -29,7 +29,7 @@ if (loginButton) {
         let username = document.getElementById('login');
         let key = document.getElementById('api-key');
         let password = document.getElementById('senha');
-        login.apiKey = '80ab4bdc4c3ab3975c1e48fcbaf7edec';
+        login.apiKey = key.value;
         login.username = username.value;
         login.password = password.value;
         login.requestToken = yield criarRequestToken(login.apiKey);

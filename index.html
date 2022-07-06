@@ -10,42 +10,45 @@
 </head>
 
 <body>
-    <div class="lateral-container">
-        <div class="titulo-Login"><h1>LOGIN</h1></div>
-        <div class="login">
-            <input id="login" type="email" placeholder="Login" >
-            <input id="senha" placeholder="Senha" type="password">
-            <input id="api-key" placeholder="Api Key">
-            <button class="btn_page" id="btn-logar">Login</button>
-        </div>
-
-        <div id="procura-container">
-            <input id="search" placeholder="Escreva...">
-            <button class="btn_page" id="search-button">Pesquisar Filme</button>
-        </div>
-
-        <div class="titulo"><h1>LISTA</h1></div>
-        <div class="lista">
-            <input id="ipt_idlista" type="text" placeholder="Id da Lista" >
-            <input id="ipt_lista" type="text" placeholder="Nome da Lista" >
-            <textarea name="ipt_descricao" id="ipt_descricao" cols="30" rows="10" placeholder="Descrição da Lista"></textarea>
-            <div class="btn-lista">
-                <button class="btn_page" id="btn-criarlista">Criar Lista</button>
-                <button class="btn_page" id="btn-removerlista">Remover Lista</button>
-                <button class="btn_page" id="btn-mostrarlistas">Mostrar Listas</button>
+    <div class="body-central">
+        <div class="lateral-container">
+            <div class="titulo-Login"><h1>LOGIN</h1></div>
+            <div class="login">
+                <input id="login" type="email" placeholder="Login" >
+                <input id="senha" placeholder="Senha" type="password">
+                <input id="api-key" placeholder="Api Key">
+                <button class="btn_page" id="btn-logar">Login</button>
             </div>
-
-        </div>
-    </div>
     
-    <div class="central-container">
-        <div class="titulo"><h1>FILMES</h1></div>
-        <div id="filme-detalhado-container">
+            <div id="procura-container">
+                <input id="search" placeholder="Escreva...">
+                <button class="btn_page" id="search-button">Pesquisar Filme</button>
+            </div>
+    
+            <div class="titulo"><h1>LISTA</h1></div>
+            <div class="lista">
+                <input id="ipt_idlista" type="text" placeholder="Id da Lista" >
+                <input id="ipt_lista" type="text" placeholder="Nome da Lista" >
+                <textarea name="ipt_descricao" id="ipt_descricao" cols="30" rows="10" placeholder="Descrição da Lista"></textarea>
+                <div class="btn-lista">
+                    <button class="btn_page" id="btn-criarlista">Criar Lista</button>
+                    <button class="btn_page" id="btn-removerlista">Remover Lista</button>
+                    <button class="btn_page" id="btn-mostrarlistas">Mostrar Listas</button>
+                </div>
+    
+            </div>
         </div>
-        <div id="resultado-container">
+        
+        <div class="central-container">
+            <div class="titulo"><h1>FILMES</h1></div>
+            <div id="filme-detalhado-container">
+            </div>
+            <div id="resultado-container">
+            </div>
         </div>
     </div>
 
+    <footer class="footer">Oberdan Rocha @ Projeto Dio - Desafio 4</footer>
     <script type="text/javascript" src="./desafios/desafio4.js"></script>
 </body>
 
